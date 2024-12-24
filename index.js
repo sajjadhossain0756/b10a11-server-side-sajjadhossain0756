@@ -31,6 +31,12 @@ async function run() {
     const database = client.db("lost&foundDB");
     const lostAndFoundCollection = database.collection("lostAndFoundItems");
 
+    // get all items mongodb to server
+    app.get('/allItems',async(req,res)=>{
+        const result = await lostAndFoundCollection.find().toArray()
+        res.send(result)
+    })
+    // insert one item client to db;
     app.post('/allItems',async(req,res)=>{
         const lostAndFoundItems = req.body;
         const result = await lostAndFoundCollection.insertOne(lostAndFoundItems);
