@@ -46,7 +46,6 @@ async function run() {
     })
     // get my add items by user email 
     app.get('/allItems/myItems/:email', async (req, res) => {
-
         const email = req.params.email;
 
         const query = { userEmail: email};
@@ -54,6 +53,36 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
     });
+    app.put('/allItems/:id', async (req, res) => {
+      const id = req.params.id;
+      const updateItem = req.body;
+      console.log(updateItem)
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateData = {
+        $set: {
+          title: updateItem.title,
+          type: updateItem.type,
+          date: updateItem.date,
+          category: updateItem.category,
+          description: updateItem.description,
+          displayName: updateItem.displayName,
+          userEmail: updateItem.userEmail,
+          image: updateItem.image
+        },
+      };
+      const result = await lostAndFoundCollection.updateOne(filter, updateData, options);
+      res.send(result)
+
+    })
+    // delete one items by id from db
+    app.delete('allItems/myItems/:id',async(req,res)=>{
+        const id = req.params.id;
+        console.log(id)
+        const query = {_id: new ObjectId(id)}
+        const result = await lostAndFoundCollection.deleteOne(query);
+        res.send(result)
+    })
 
     // insert one item client to db;
     app.post('/allItems', async (req, res) => {
