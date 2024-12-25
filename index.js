@@ -9,8 +9,8 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-// username: Lost_and_Found
-// password: qZf8ZVAqeS1Fh96X
+// username: 
+// password: 
 
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.ahkjv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
@@ -76,7 +76,7 @@ async function run() {
 
     })
     // delete one items by id from db
-    app.delete('allItems/myItems/:id',async(req,res)=>{
+    app.delete('/allItems/myItems/:id',async(req,res)=>{
         const id = req.params.id;
         console.log(id)
         const query = {_id: new ObjectId(id)}
