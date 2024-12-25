@@ -30,6 +30,7 @@ async function run() {
     // await client.connect();
     const database = client.db("lost&foundDB");
     const lostAndFoundCollection = database.collection("lostAndFoundItems");
+    const recoveredCollection = database.collection("recoveredItems");
 
     // get all items mongodb to server
     app.get('/allItems',async(req,res)=>{
@@ -47,6 +48,14 @@ async function run() {
     app.post('/allItems',async(req,res)=>{
         const lostAndFoundItems = req.body;
         const result = await lostAndFoundCollection.insertOne(lostAndFoundItems);
+        res.send(result)
+    })
+
+    // recovered collection start here
+    // insert one items client to db;
+    app.post('/recoveredItems',async(req,res)=>{
+        const recoveredItems = req.body;
+        const result = await recoveredCollection.insertOne(recoveredItems);
         res.send(result)
     })
 
