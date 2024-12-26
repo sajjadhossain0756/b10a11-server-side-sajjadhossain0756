@@ -1,14 +1,39 @@
 require('dotenv').config()
 const express = require('express')
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT || 9000
 const app = express()
 
-app.use(cors())
+app.use(cors({
+  origin: [
+    'http://localhost:5174',
+    'https://b10a11-server-side-sajjadhossain0756.vercel.app',
+    'https://b10a11-server-side-sajjadhossain0756-nfs0j3wt8.vercel.app'
+  ],
+  credentials: true
+}))
 app.use(express.json())
+app.use(cookieParser())
 
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: 'unAthorize Access' })
+  }
+  // verify token
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'unAthorize Access' })
+    }
+    req.user = decoded;
+    next()
+  })
+
+}
 // username: 
 // password: 
 
@@ -45,13 +70,17 @@ async function run() {
       res.send(result)
     })
     // get my add items by user email 
-    app.get('/allItems/myItems/:email', async (req, res) => {
-        const email = req.params.email;
+    app.get('/allItems/myItems/:email',verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { userEmail: email };
+      //  check valid user
+      if(req.user.email !== req.params.email){
+        return res.status(403).send({message: 'forbidden'})
+    }
 
-        const query = { userEmail: email};
-        const cursor = lostAndFoundCollection.find(query);
-        const result = await cursor.toArray();
-        res.send(result);
+      const cursor = lostAndFoundCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
     });
     app.put('/allItems/:id', async (req, res) => {
       const id = req.params.id;
@@ -76,12 +105,12 @@ async function run() {
 
     })
     // delete one items by id from db
-    app.delete('/allItems/myItems/:id',async(req,res)=>{
-        const id = req.params.id;
-        console.log(id)
-        const query = {_id: new ObjectId(id)}
-        const result = await lostAndFoundCollection.deleteOne(query);
-        res.send(result)
+    app.delete('/allItems/myItems/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await lostAndFoundCollection.deleteOne(query);
+      res.send(result)
     })
 
     // insert one item client to db;
@@ -97,6 +126,28 @@ async function run() {
       const recoveredItems = req.body;
       const result = await recoveredCollection.insertOne(recoveredItems);
       res.send(result)
+    })
+
+    // jwt create start here
+    app.post('/jwt', async (req, res) => {
+      const user = req.body
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: '1h'
+      })
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" //its will be when its render for production
+      })
+        .send({ success: true })
+    })
+    // clear cookie 
+    app.post('/logout', (req, res) => {
+      res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production"
+      })
+        .send({ success: true })
     })
 
     // Send a ping to confirm a successful connection
