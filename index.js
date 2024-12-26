@@ -59,7 +59,7 @@ async function run() {
 
     // get all items mongodb to server
     app.get('/allItems', async (req, res) => {
-      const search = req.query.search
+      const search = req.query.search || " "
       console.log(search)
       let query = {title:{
          $regex: search, $options: 'i'
@@ -122,6 +122,18 @@ async function run() {
     app.post('/allItems', async (req, res) => {
       const lostAndFoundItems = req.body;
       const result = await lostAndFoundCollection.insertOne(lostAndFoundItems);
+      res.send(result)
+    })
+    // update status in db
+    app.patch('/allItems/:id',async(req,res)=>{
+      const id = req.params.id;
+      const {curStatus} = req.body;
+      console.log(curStatus)
+      const filter = {_id: new ObjectId(id)}
+      const updateData = {
+        $set: {status: curStatus},
+      }
+      const result = await lostAndFoundCollection.updateOne(filter,updateData)
       res.send(result)
     })
 
