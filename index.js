@@ -11,8 +11,8 @@ const app = express()
 app.use(cors({
   origin: [
     'http://localhost:5174',
-    'https://b10a11-server-side-sajjadhossain0756.vercel.app',
-    'https://b10a11-server-side-sajjadhossain0756-nfs0j3wt8.vercel.app'
+    'https://lost-and-found-db5b7.web.app',
+    'https://lost-and-found-db5b7.firebaseapp.com'
   ],
   credentials: true
 }))
@@ -59,7 +59,12 @@ async function run() {
 
     // get all items mongodb to server
     app.get('/allItems', async (req, res) => {
-      const result = await lostAndFoundCollection.find().toArray()
+      const search = req.query.search
+      console.log(search)
+      let query = {title:{
+         $regex: search, $options: 'i'
+      }}
+      const result = await lostAndFoundCollection.find(query).toArray()
       res.send(result)
     })
     // get one items by id from mongodb to server
@@ -137,7 +142,8 @@ async function run() {
 
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" //its will be when its render for production
+        secure: process.env.NODE_ENV === "production",//its will be when its render for production
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
         .send({ success: true })
     })
@@ -145,7 +151,8 @@ async function run() {
     app.post('/logout', (req, res) => {
       res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production"
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       })
         .send({ success: true })
     })
