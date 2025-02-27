@@ -10,7 +10,7 @@ const app = express()
 
 app.use(cors({
   origin: [
-    'http://localhost:5174',
+    'http://localhost:5173',
     'https://lost-and-found-db5b7.web.app',
     'https://lost-and-found-db5b7.firebaseapp.com'
   ],
@@ -53,17 +53,23 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
+
     const database = client.db("lost&foundDB");
     const lostAndFoundCollection = database.collection("lostAndFoundItems");
     const recoveredCollection = database.collection("recoveredItems");
 
     // get all items mongodb to server
     app.get('/allItems', async (req, res) => {
-      const search = req.query.search || " "
-      console.log(search)
+      const search = req.query.search || " ";
+      const itemType = req.query.itemType;
+      
       let query = {title:{
          $regex: search, $options: 'i'
       }}
+      if(itemType){
+        query.type = itemType;
+      }
+
       const result = await lostAndFoundCollection.find(query).toArray()
       res.send(result)
     })
@@ -170,8 +176,8 @@ async function run() {
     })
 
     // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
